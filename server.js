@@ -3,13 +3,14 @@ const usersRouter = require('./users/userRouter');
 const postsRouter = require('./posts/postRouter');
 
 const server = express();
+
 server.use(express.json());
 
 // Custom middleware
 server.use(logger);
 
 server.use('/api/users', usersRouter);
-server.use('/api/post', postRouter);
+server.use('/api/posts', postsRouter);
 
 server.get('/', (req, res) => {
   res.send(`<h2>Let's write some middleware!</h2>`)
