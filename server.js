@@ -18,10 +18,9 @@ server.get('/', (req, res) => {
 //custom middleware
 
 function logger(req, res, next) {
-  console.log(`Request Type: ${req.method}`);
-  console.log(`Request Url: ${req.url}`);
-  console.log(`Request Url: ${req.url}`);
-  console.log(new Date().getTime());
+  console.log(`Type: ${req.method}`);
+  console.log(`URL: ${req.url}`);
+  console.log(new Date(Date.parse(Date())));
   next();
 };
 

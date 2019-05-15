@@ -1,87 +1,86 @@
 const express = require('express');
-const userDb = require('./userDb.js');
+const userDb = require('../users/userDb.js');
+const postDb = require('../posts/postDb.js');
 
 const router = express.Router();
 
-router.post('/', validatePost, validateUser, async (req, res) => {
-    const { name } = req.body;
-    userDb.insert(name)
-    .then(res => {
-        res.json(res);
-    })
-    .catch(err => {
-        res.status(500).json({ err: 'Database could not get info'});
-    })
-});
+const router = express.Router();
 
-router.get('/', async (req, res) => {
+router.post('/', validateBody, validateUser, async(req, res) => {
     try {
-        const user = await userDb.get();
-        res.json(user);
-    } catch(err) {
-        res.status(500).json(err);
-    }
-});
+        const user = await userDb.insert(req.body);
 
-router.get('/:id', (req, res) => {
-    res.json(req.user);
-});
-
-router.get('/:id/posts', validateUserId, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const posts = await userDb.getUserPosts(id)
-        if(posts) {
-            res.status(200).json(posts);
-        } else {
-            res.status(400).json({ message: 'Could not get posts'});
-        }
-    }
-});
-
-router.delete('/:id', validateUserId, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await userDb.remove(id);
-        res.status(200).json(user);
+        res
+            .status(200)
+            .json({message: 'User successfully added to database'});
     } catch (err) {
-        res.status(500).json({ message: 'User cannot be removed'});
+        res
+            .status(500)
+            .json({err});
     }
 });
 
-router.put('/:id', validateUserId, validateUser, async (req, res) => {
+router.post('/:id/posts', validateUserId, validateBody, validatePost, async(req, res) => {
     try {
-        
+        const post = {
+            user_id: req.user.id,
+            text: req.user.text
+        };
+        const result = await postDb.insert(post);
+
+        if (result) {
+            res
+                .status(200)
+                .json({message: 'Post succesfully added to database'});
+        } else {
+            res
+                .status(400)
+                .json({message: 'Unable to add post to database'});
+        }
+    } catch (err) {
+        res
+            .status(500)
+            .json(err);
     }
 });
 
-//custom middleware
+function validateBody(req, res, next) {
+    if (!req.body || Object.keys(body.length === 0)) {
+        res
+            .status(400)
+            .json({message: 'missing user data'});
+    };
+    next();
+};
 
-async function validateUserId(req, res, next) {
+function validateUserId(req, res, next) {
+    const {id} = req.params;
+    if (!id) {
+        res
+            .status(400)
+            .json({message: 'invalid user id'});
+        req.user = user;
+    }
+
     try {
-        const { id } = req.params;
         const user = await userDb.getById(id);
-        if (user) {
-            req.user = user;
-            next();
-        } else {
-            res.status(404).json({ message: 'invalid user id' });
+        if (!user) {
+            res
+                .status(400)
+                .json({message: 'invalid user id'})
         }
     } catch (err) {
-        res.status(500).json({ message: 'Failed to process request'});
+        res
+            .status(500)
+            .json({err});
     }
     next();
 };
 
-async function validateUser(req, res, next) {
+function validateUser(req, res, next) {
     const { name } = req.body;
-    if(!name) {
-        res.status(400).json({ message: "Missing required name field"})
-    } else if (!req.body) {
-        res.status(400).json({message: 'missing user data'})
+    if (!name) {
+        return res.status(400).json({ message: 'missing required name field'})
     }
     next();
-};
-
-
-module.exports = router;
+}
