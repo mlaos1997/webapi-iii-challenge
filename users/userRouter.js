@@ -21,7 +21,6 @@ router.get('/:id', validateUserId, async(req, res) => {
 
 router.post('/', validateBody, validateUser, async(req, res) => {
     try {
-        console.log('hey')
         const user = await userDb.insert(req.body);
 
         res
@@ -36,26 +35,52 @@ router.post('/', validateBody, validateUser, async(req, res) => {
 
 router.post('/:id/posts', validateUserId, validateBody, validatePost, async(req, res) => {
     try {
-        console.log('inside post')
         const post = {
             user_id: req.user.id,
-            text: req.user.text
+            text: req.body.text
         };
         const result = await postDb.insert(post);
 
         if (result) {
-            res
-                .status(200)
-                .json({message: 'Post succesfully added to database'});
+            res.json({message: "post added to database"})
         } else {
             res
                 .status(400)
-                .json({message: 'Unable to add post to database'});
+                .json({message: "could not add post to database"});
         }
     } catch (err) {
         res
             .status(500)
             .json(err);
+    }
+});
+
+router.put('/:id', validateUserId, validateBody, validateUser, async(req, res) => {
+    console.log(req.body);
+    try {
+        const user = await userDb.update(req.user.id, req.body);
+
+        if (user) {
+            res.json(user)
+        } else {
+            res
+                .status(400)
+                .json({message: 'unable to update the user'});
+        }
+    } catch (err) {
+        res
+            .status(500)
+            .json(err);
+    }
+});
+
+router.delete('/:id', validateUserId, async(req, res) => {
+    try {
+        const { id } = req.params;
+        const user = await userDb.remove(id);
+        res.status(200).json({ message: 'user removed from database'})
+    } catch (err) {
+        res.status(500).json({ message: 'user cannot be removed from database' })
     }
 });
 
@@ -69,7 +94,6 @@ function validateBody(req, res, next) {
 };
 
 async function validateUserId(req, res, next) {
-    console.log('Validate User Id running')
     const {id} = req.params;
     if (!id) {
         res
