@@ -1,9 +1,10 @@
-const express = 'express';
+const express = require('express');
+const userDb = require('./userDb.js');
 
 const router = express.Router();
 
 router.post('/', (req, res) => {
-
+    const { name } = req.body;
 });
 
 router.post('/:id/posts', (req, res) => {
